@@ -2,6 +2,7 @@ import importlib
 from pathlib import Path
 from typing import Generator
 
+from sqlalchemy import event
 from sqlmodel import Session, SQLModel, create_engine
 
 from app.config import get_settings
@@ -11,8 +12,18 @@ def build_engine():
     settings = get_settings()
     if settings.database_url.startswith("sqlite:///./data/"):
         Path("data").mkdir(exist_ok=True)
-    connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
-    return create_engine(settings.database_url, connect_args=connect_args)
+    is_sqlite = settings.database_url.startswith("sqlite")
+    connect_args = {"check_same_thread": False} if is_sqlite else {}
+    db_engine = create_engine(settings.database_url, connect_args=connect_args)
+
+    if is_sqlite:
+        @event.listens_for(db_engine, "connect")
+        def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record):
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
+    return db_engine
 
 
 engine = build_engine()

@@ -4,6 +4,7 @@ import sys
 import textwrap
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -133,6 +134,31 @@ def test_platform_account_without_creator_violates_constraints():
             platform=Platform.youtube,
             handle="@orphan",
             profile_url="https://youtube.com/@orphan",
+        )
+        session.add(account)
+
+        with pytest.raises(IntegrityError):
+            session.commit()
+
+
+def test_build_engine_rejects_dangling_sqlite_foreign_key(tmp_path, monkeypatch):
+    import app.db as db
+
+    db_path = tmp_path / "foreign_keys.db"
+    monkeypatch.setattr(
+        db,
+        "get_settings",
+        lambda: SimpleNamespace(database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    engine = db.build_engine()
+    SQLModel.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        account = PlatformAccount(
+            creator_id=999999,
+            platform=Platform.youtube,
+            handle="@missing",
+            profile_url="https://youtube.com/@missing",
         )
         session.add(account)
 
