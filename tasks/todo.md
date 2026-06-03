@@ -7,7 +7,8 @@
 - [x] Self-review implementation plan against the spec.
 - [x] Ask the user to choose execution mode before implementation starts.
 - [x] Execute Task 1: Project Skeleton And Dependency Setup.
-- [ ] Execute Task 2: Database Models And Session Helpers.
+- [x] Execute Task 2: Database Models And Session Helpers.
+- [ ] Execute Task 3: Query Parser And Multilingual Search Intent.
 
 ## Review
 - Implementation plan saved to `docs/superpowers/plans/2026-06-03-influencer-discovery-mvp-implementation.md`.
@@ -15,3 +16,4 @@
 - Corrected an accidental write to the old workspace by moving the plan into `D:\Influencer_Discovery` and restoring the old workspace task log.
 - User chose Subagent-Driven execution mode.
 - Task 1 completed with spec compliance and code quality review approval. Verification: `python -m pytest -q` passed with 2 tests and one third-party FastAPI/Starlette warning; `python -m ruff check app tests` passed.
+- Task 2 completed with spec compliance and code quality review approval after hardening `init_db()`, FK nullability, naive UTC defaults, and SQLite FK enforcement. Verification: `python -m pytest -q` passed with 9 tests and one third-party warning; `python -m ruff check app tests` passed.
