@@ -6,7 +6,8 @@ from sqlmodel import Field, Relationship, SQLModel
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    """Return naive UTC for SQLite-compatible datetime storage."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Platform(StrEnum):
@@ -35,11 +36,12 @@ class Creator(SQLModel, table=True):
     accounts: list["PlatformAccount"] = Relationship(back_populates="creator")
     contacts: list["ContactRecord"] = Relationship(back_populates="creator")
     follow_ups: list["FollowUp"] = Relationship(back_populates="creator")
+    score_results: list["ScoreResult"] = Relationship(back_populates="creator")
 
 
 class PlatformAccount(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id")
+    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id", nullable=False)
     platform: Platform
     handle: str
     profile_url: str
@@ -50,11 +52,12 @@ class PlatformAccount(SQLModel, table=True):
 
     creator: Creator = Relationship(back_populates="accounts")
     content_samples: list["ContentSample"] = Relationship(back_populates="account")
+    score_results: list["ScoreResult"] = Relationship(back_populates="platform_account")
 
 
 class ContentSample(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    account_id: Optional[int] = Field(default=None, foreign_key="platformaccount.id")
+    account_id: Optional[int] = Field(default=None, foreign_key="platformaccount.id", nullable=False)
     content_url: str
     title: str = ""
     description: str = ""
@@ -72,7 +75,7 @@ class ContentSample(SQLModel, table=True):
 
 class ContactRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id")
+    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id", nullable=False)
     contact_type: str
     value: str
     source_url: str
@@ -99,9 +102,13 @@ class SearchTask(SQLModel, table=True):
 
 class ScoreResult(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    task_id: Optional[int] = Field(default=None, foreign_key="searchtask.id")
-    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id")
-    platform_account_id: Optional[int] = Field(default=None, foreign_key="platformaccount.id")
+    task_id: Optional[int] = Field(default=None, foreign_key="searchtask.id", nullable=False)
+    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id", nullable=False)
+    platform_account_id: Optional[int] = Field(
+        default=None,
+        foreign_key="platformaccount.id",
+        nullable=False,
+    )
     normalized_views: float = 0.0
     normalized_engagement: float = 0.0
     normalized_followers: float = 0.0
@@ -113,11 +120,13 @@ class ScoreResult(SQLModel, table=True):
     risks: str = ""
 
     task: SearchTask = Relationship(back_populates="results")
+    creator: Creator = Relationship(back_populates="score_results")
+    platform_account: PlatformAccount = Relationship(back_populates="score_results")
 
 
 class FollowUp(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id")
+    creator_id: Optional[int] = Field(default=None, foreign_key="creator.id", nullable=False)
     owner: str = ""
     status: str = "待审核"
     tags: str = ""

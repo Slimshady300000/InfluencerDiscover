@@ -1,3 +1,4 @@
+import importlib
 from pathlib import Path
 from typing import Generator
 
@@ -18,6 +19,8 @@ engine = build_engine()
 
 
 def init_db() -> None:
+    # Register table classes before creating metadata-backed tables.
+    importlib.import_module("app.models")
     SQLModel.metadata.create_all(engine)
 
 
