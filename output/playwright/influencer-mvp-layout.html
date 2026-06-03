@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Influencer Discovery MVP Wireframe</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f6f7f9;
+      color: #1f2933;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+    .page {
+      width: 1280px;
+      min-height: 1400px;
+      padding: 34px 42px 46px;
+      margin: 0 auto;
+      background: #f6f7f9;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.25;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 0 0 26px;
+      color: #607080;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+    .mockup {
+      border: 1px solid #d9e0e7;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 24px rgba(31, 41, 51, 0.06);
+    }
+    .mockup-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid #e4e9ee;
+      background: #eef3f7;
+      color: #33475b;
+      font-size: 17px;
+      font-weight: 720;
+    }
+    .mockup-body { padding: 18px; }
+    .mock-nav {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 0 16px;
+      border: 1px solid #dfe6ee;
+      border-radius: 6px;
+      background: #f9fbfc;
+      color: #314558;
+      font-size: 15px;
+      font-weight: 650;
+    }
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .label {
+      margin-bottom: 8px;
+      color: #6b7c8f;
+      font-size: 12px;
+      font-weight: 720;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .input {
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border: 1px solid #cfd9e3;
+      border-radius: 6px;
+      background: #fff;
+      color: #263849;
+      font-size: 15px;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .button {
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      border: 1px solid #c9d4df;
+      border-radius: 6px;
+      background: #f8fafc;
+      color: #253647;
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .placeholder {
+      min-height: 116px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border: 1px dashed #bdc9d5;
+      border-radius: 6px;
+      background: #fbfcfd;
+      color: #607080;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .metric {
+      padding: 14px;
+      border: 1px solid #e1e7ed;
+      border-radius: 6px;
+      background: #fafbfc;
+    }
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+    .metric span {
+      color: #66788a;
+      font-size: 13px;
+    }
+    .table {
+      display: grid;
+      grid-template-columns: 1.2fr .9fr .9fr .9fr .9fr .9fr 1.1fr;
+      border: 1px solid #dfe6ee;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .table div {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-right: 1px solid #e6ebf0;
+      border-bottom: 1px solid #e6ebf0;
+      font-size: 14px;
+    }
+    .table div:nth-child(7n) { border-right: 0; }
+    .table .head {
+      background: #eef3f7;
+      color: #33475b;
+      font-weight: 720;
+    }
+    .table .score {
+      font-weight: 780;
+      color: #0f766e;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: 18px;
+    }
+    .profile-box {
+      padding: 16px;
+      border: 1px solid #dfe6ee;
+      border-radius: 6px;
+      background: #fbfcfd;
+    }
+    .avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #d7e3ec, #f5f7fa);
+      border: 1px solid #cbd7e2;
+      margin-bottom: 14px;
+    }
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 9px 0;
+      border-bottom: 1px solid #e7edf2;
+      font-size: 14px;
+    }
+    .profile-row:last-child { border-bottom: 0; }
+    .copy-block {
+      padding: 2px 0;
+    }
+    .copy-block h2 {
+      margin: 0 0 12px;
+      font-size: 23px;
+    }
+    .copy-block p {
+      margin: 0 0 11px;
+      color: #3f5367;
+      line-height: 1.62;
+      font-size: 15px;
+    }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #edf7f5;
+      color: #0f766e;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .flow-step {
+      min-height: 84px;
+      padding: 14px;
+      border: 1px solid #dce5ec;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(31, 41, 51, 0.045);
+    }
+    .flow-step strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+    .flow-step span {
+      color: #607080;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>达人发现工具 MVP：界面结构线框</h1>
+    <p class="subtitle">目标：经理能从标准候选列表快速挑出少数达人做深度尽调，并导出表格或评审卡片。</p>
+
+    <section class="flow">
+      <div class="flow-step"><strong>1. 输入主题</strong><span>关键词、品牌 brief、种子达人链接。</span></div>
+      <div class="flow-step"><strong>2. 候选发现</strong><span>TikTok、YouTube、Instagram 多源搜索。</span></div>
+      <div class="flow-step"><strong>3. 标准评分</strong><span>数据表现优先，主题作为门槛。</span></div>
+      <div class="flow-step"><strong>4. 经理筛选</strong><span>表格排序、收藏、备注、分配。</span></div>
+      <div class="flow-step"><strong>5. 深度尽调</strong><span>生成卡片、风险点、联系入口。</span></div>
+    </section>
+
+    <section class="mockup">
+      <div class="mockup-header">第一屏：搜索与任务创建</div>
+      <div class="mockup-body">
+        <div class="mock-nav">达人发现 | 搜索任务 | 达人库 | 收藏/跟进 | 导出</div>
+        <div class="grid-two">
+          <div>
+            <div class="label">输入</div>
+            <div class="input">skincare, TikTok seed URL, Southeast Asia beauty brief</div>
+            <div class="buttons">
+              <div class="button">TikTok</div>
+              <div class="button">YouTube</div>
+              <div class="button">Instagram</div>
+              <div class="button">多语言扩展</div>
+              <div class="button">开始搜索</div>
+            </div>
+          </div>
+          <div class="placeholder">任务状态：排队中 / 搜索中 / 分析中 / 完成<br>目标：1-5 分钟内产出标准候选</div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><strong>50</strong><span>候选达人</span></div>
+          <div class="metric"><strong>3</strong><span>平台覆盖</span></div>
+          <div class="metric"><strong>12</strong><span>语言关键词</span></div>
+          <div class="metric"><strong>78%</strong><span>联系方式覆盖</span></div>
+          <div class="metric"><strong>5</strong><span>建议深度尽调</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mockup">
+      <div class="mockup-header">第二屏：20-50 个标准候选</div>
+      <div class="mockup-body">
+        <div class="table">
+          <div class="head">达人</div><div class="head">平台</div><div class="head">粉丝</div><div class="head">近期播放</div><div class="head">互动率</div><div class="head">匹配分</div><div class="head">联系方式</div>
+          <div>@creator_a</div><div>TikTok</div><div>820K</div><div>210K</div><div>5.8%</div><div class="score">91</div><div>邮箱 + DM</div>
+          <div>@creator_b</div><div>YouTube</div><div>310K</div><div>96K</div><div>7.1%</div><div class="score">87</div><div>合作表单</div>
+          <div>@creator_c</div><div>Instagram</div><div>560K</div><div>140K</div><div>4.4%</div><div class="score">82</div><div>Linktree + DM</div>
+          <div>@creator_d</div><div>TikTok</div><div>190K</div><div>88K</div><div>8.3%</div><div class="score">79</div><div>DM</div>
+        </div>
+        <div class="buttons">
+          <div class="button">收藏</div>
+          <div class="button">分配给同事</div>
+          <div class="button">生成深度尽调</div>
+          <div class="button">导出 Excel</div>
+          <div class="button">导出评审卡片</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mockup">
+      <div class="mockup-header">第三屏：深度尽调卡片 / 评审报告</div>
+      <div class="mockup-body">
+        <div class="detail-grid">
+          <div class="profile-box">
+            <div class="avatar"></div>
+            <div class="profile-row"><span>达人</span><strong>@creator_a</strong></div>
+            <div class="profile-row"><span>平台</span><strong>TikTok</strong></div>
+            <div class="profile-row"><span>粉丝</span><strong>820K</strong></div>
+            <div class="profile-row"><span>联系方式</span><strong>邮箱 + DM</strong></div>
+            <div class="profile-row"><span>状态</span><strong>待经理审核</strong></div>
+          </div>
+          <div class="copy-block">
+            <h2>@creator_a</h2>
+            <p><strong>推荐理由：</strong>近期护肤内容播放稳定，互动率高于同批候选，商务邮箱公开，适合进入项目提案备选。</p>
+            <p><strong>代表内容：</strong>补水精华测评、敏感肌夜间护理、开架护肤对比。</p>
+            <p><strong>数据亮点：</strong>近 10 条内容平均播放量约 210K，互动率 5.8%，高于本批 TikTok 候选中位数。</p>
+            <p><strong>风险点：</strong>最近两周内容有生活方式偏移，需要人工确认护肤主题稳定性。</p>
+            <p><strong>建议联系：</strong>优先商务邮箱，DM 入口作为备选，不自动发送私信。</p>
+            <div class="tag-row">
+              <span class="tag">高数据表现</span>
+              <span class="tag">公开邮箱</span>
+              <span class="tag">需人工复核主题</span>
+              <span class="tag">建议深度沟通</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
