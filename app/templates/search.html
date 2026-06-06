@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel">
+  <h1>Search creator candidates</h1>
+  <form method="post" action="/search" class="search-form">
+    <input name="input_text" required aria-label="Keyword, brand brief, or seed creator URL">
+    <label><input type="checkbox" name="platforms" value="youtube" checked> YouTube</label>
+    <label><input type="checkbox" name="platforms" value="tiktok"> TikTok</label>
+    <label><input type="checkbox" name="platforms" value="instagram"> Instagram</label>
+    <button type="submit">Start Search</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Recent tasks</h2>
+  <table>
+    <tr><th>ID</th><th>Input</th><th>Status</th></tr>
+    {% for task in tasks %}
+      <tr><td><a href="/tasks/{{ task.id }}">{{ task.id }}</a></td><td>{{ task.input_text }}</td><td>{{ task.status }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}

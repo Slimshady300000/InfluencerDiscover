@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel">
+  <h1>Search task #{{ task.id }}</h1>
+  <p>Status: {{ task.status }}</p>
+  <p>Input: {{ task.input_text }}</p>
+  <table>
+    <tr><th>Creator ID</th><th>Score</th><th>Reasons</th><th>Risks</th></tr>
+    {% for result in task.results %}
+      <tr>
+        <td>{{ result.creator_id }}</td>
+        <td>{{ result.final_score }}</td>
+        <td>{{ result.reasons }}</td>
+        <td>{{ result.risks }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}
