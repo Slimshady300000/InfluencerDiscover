@@ -67,7 +67,7 @@ def score_batch(
                     topic_score=candidate.topic_score,
                     data_performance_score=data_score,
                     contactability_score=contact_score,
-                    final_score=round(final_score, 2),
+                    final_score=final_score,
                     reasons=[
                         "Ranked mainly by recent views, engagement rate, and follower count.",
                         "Compared within the same platform batch.",
