@@ -1,5 +1,6 @@
 from statistics import mean
 
+from sqlalchemy import delete
 from sqlmodel import Session
 
 from app.connectors.base import RawCandidate
@@ -31,6 +32,7 @@ def run_search_task(session: Session, task_id: int) -> None:
         platforms = [Platform(value) for value in task.platforms.split(",") if value]
         intent = parse_search_input(task.input_text, platforms)
         raw_candidates = ManualConnector().search(intent)
+        session.exec(delete(ScoreResult).where(ScoreResult.task_id == task.id))
         persisted = [_persist_candidate(session, candidate) for candidate in raw_candidates]
         metrics = [
             _metrics_for_candidate(candidate, creator_id, account_id)
@@ -61,9 +63,12 @@ def run_search_task(session: Session, task_id: int) -> None:
         session.add(task)
         session.commit()
     except Exception as exc:
-        task.status = TaskStatus.failed
-        task.error_summary = str(exc)
-        session.add(task)
+        session.rollback()
+        failed_task = session.get(SearchTask, task_id)
+        if failed_task is not None:
+            failed_task.status = TaskStatus.failed
+            failed_task.error_summary = str(exc)
+            session.add(failed_task)
         session.commit()
         raise
 
@@ -80,9 +85,7 @@ def _persist_candidate(session: Session, candidate: RawCandidate) -> tuple[RawCa
         avatar_url=candidate.avatar_url,
     )
     session.add(account)
-    session.commit()
-    session.refresh(creator)
-    session.refresh(account)
+    session.flush()
 
     for content in candidate.contents:
         session.add(
@@ -110,7 +113,6 @@ def _persist_candidate(session: Session, candidate: RawCandidate) -> tuple[RawCa
             )
         )
 
-    session.commit()
     return candidate, creator.id, account.id
 
 
