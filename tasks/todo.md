@@ -12,7 +12,8 @@
 - [x] Execute Task 4: Scoring Service.
 - [x] Execute Task 5: Connector Interfaces And Manual Connector.
 - [x] Execute Task 6: Search Runner Persistence And Scoring Integration.
-- [ ] Execute Task 7: Web UI With Search, Results, And Follow-Up State.
+- [x] Execute Task 7: Web UI With Search, Results, And Follow-Up State.
+- [ ] Execute Task 8: Excel Export.
 
 ## Review
 - Implementation plan saved to `docs/superpowers/plans/2026-06-03-influencer-discovery-mvp-implementation.md`.
@@ -25,3 +26,4 @@
 - Task 4 completed with spec compliance and code quality review approval after preserving raw score precision and covering all-zero metrics plus per-platform normalization edge cases. Verification: `python -m pytest tests/test_scoring.py -q` passed with 5 tests; `python -m pytest -q` passed with 25 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 5 completed with spec compliance and code quality review approval. Non-blocking low review notes were accepted because they do not affect the Task 5 contract or downstream Task 6 behavior. Verification: `python -m pytest tests/test_search_runner.py -q` passed with 1 test; `python -m pytest -q` passed with 26 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 6 completed with spec compliance and code quality review approval after making candidate, contact, content, and score persistence transactional and adding failure rollback coverage. Verification: `python -m pytest tests/test_search_runner.py -q` passed with 4 tests; `python -m pytest -q` passed with 29 tests and one third-party warning; `python -m ruff check app tests` passed.
+- Task 7 completed with spec compliance and code quality review approval after isolating web tests, adding missing-task 404s, redirecting failed searches to task detail, and exposing lightweight follow-up owner/status/tags/notes. Verification: `python -m pytest tests/test_web.py -q` passed with 6 tests and one third-party warning; `python -m pytest -q` passed with 33 tests and one third-party warning; `python -m ruff check app tests` passed.
