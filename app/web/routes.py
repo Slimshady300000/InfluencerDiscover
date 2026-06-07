@@ -4,7 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.models import Creator, FollowUp, PlatformAccount, SearchTask, TaskStatus, utc_now
+from app.models import Creator, FollowUp, PlatformAccount, ScoreResult, SearchTask, TaskStatus, utc_now
+from app.services.due_diligence import build_due_diligence_card
 from app.services.exporter import build_candidate_workbook
 from app.services.search_runner import run_search_task
 
@@ -84,6 +85,34 @@ def export_task(task_id: int, session: Session = Depends(get_session)):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="task-{task_id}-candidates.xlsx"'},
     )
+
+
+@router.get("/results/{result_id}/card")
+def result_card(result_id: int, request: Request, session: Session = Depends(get_session)):
+    result = session.get(ScoreResult, result_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Score result not found")
+
+    creator = session.get(Creator, result.creator_id)
+    if creator is None:
+        raise HTTPException(status_code=404, detail="Creator not found")
+
+    account = session.get(PlatformAccount, result.platform_account_id)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Platform account not found")
+
+    titles = [sample.title for sample in account.content_samples]
+    contact = creator.contacts[0].value if creator.contacts else ""
+    card = build_due_diligence_card(
+        creator_name=creator.display_name,
+        platform=account.platform.value,
+        follower_count=account.follower_count,
+        score=result.final_score,
+        content_titles=titles,
+        contact=contact,
+        risks=[result.risks] if result.risks else [],
+    )
+    return templates.TemplateResponse(request, "card.html", {"card": card})
 
 
 @router.post("/creators/{creator_id}/follow-up")

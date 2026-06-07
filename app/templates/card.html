@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel">
+  <h1>{{ card.creator_name }}</h1>
+  <p><strong>Recommendation:</strong> {{ card.recommendation }}</p>
+  <p><strong>Representative content:</strong> {{ card.representative_content }}</p>
+  <p><strong>Data highlights:</strong> {{ card.data_highlights }}</p>
+  <p><strong>Risks:</strong> {{ card.risks }}</p>
+  <p><strong>Suggested contact:</strong> {{ card.suggested_contact }}</p>
+</section>
+{% endblock %}
