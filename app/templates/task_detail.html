@@ -3,15 +3,29 @@
 <section class="panel">
   <h1>Search task #{{ task.id }}</h1>
   <p>Status: {{ task.status }}</p>
+  {% if task.error_summary %}
+    <p>Error: {{ task.error_summary }}</p>
+  {% endif %}
   <p>Input: {{ task.input_text }}</p>
   <table>
-    <tr><th>Creator ID</th><th>Score</th><th>Reasons</th><th>Risks</th></tr>
+    <tr><th>Creator ID</th><th>Score</th><th>Reasons</th><th>Risks</th><th>Follow-up</th></tr>
     {% for result in task.results %}
+      {% set follow_up = result.creator.follow_ups[0] if result.creator.follow_ups else none %}
       <tr>
         <td>{{ result.creator_id }}</td>
         <td>{{ result.final_score }}</td>
         <td>{{ result.reasons }}</td>
         <td>{{ result.risks }}</td>
+        <td>
+          <form method="post" action="/creators/{{ result.creator_id }}/follow-up" class="follow-up-form">
+            <input type="hidden" name="task_id" value="{{ task.id }}">
+            <input name="owner" aria-label="Owner" placeholder="Owner" value="{{ follow_up.owner if follow_up else '' }}">
+            <input name="status" aria-label="Status" placeholder="Status" value="{{ follow_up.status if follow_up else '' }}">
+            <input name="tags" aria-label="Tags" placeholder="Tags" value="{{ follow_up.tags if follow_up else '' }}">
+            <textarea name="notes" aria-label="Notes" placeholder="Notes">{{ follow_up.notes if follow_up else '' }}</textarea>
+            <button type="submit">Save</button>
+          </form>
+        </td>
       </tr>
     {% endfor %}
   </table>
