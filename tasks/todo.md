@@ -16,7 +16,8 @@
 - [x] Execute Task 8: Excel Export.
 - [x] Execute Task 9: Due Diligence Card Generation.
 - [x] Execute Task 10: YouTube Connector.
-- [ ] Execute Task 11: Search Engine Connector For Cross-Platform Candidate Links.
+- [x] Execute Task 11: Search Engine Connector For Cross-Platform Candidate Links.
+- [ ] Execute Task 12: Queue And Worker.
 
 ## Review
 - Implementation plan saved to `docs/superpowers/plans/2026-06-03-influencer-discovery-mvp-implementation.md`.
@@ -33,3 +34,4 @@
 - Task 8 completed with spec compliance and code quality review approval after asserting full workbook headers, adding route-level export coverage, and exporting persisted average recent views instead of a hardcoded value. Verification: `python -m pytest tests/test_exporter.py -q` passed with 3 tests and one third-party warning; `python -m pytest -q` passed with 36 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 9 completed with spec compliance and code quality review approval after adding due diligence card generation, route/template rendering, 404 guards, and blank-title fallback coverage. Verification: `python -m pytest tests/test_due_diligence.py -q` passed with 3 tests and one third-party warning; `python -m pytest -q` passed with 39 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 10 completed with spec compliance and code quality review approval after adding the dry-run-safe YouTube connector, owned-client lifecycle handling, and strict YouTube payload ID validation. Verification: `python -m pytest tests/test_youtube_connector.py -q` passed with 6 tests; `python -m pytest -q` passed with 45 tests and one third-party warning; `python -m ruff check app tests` passed.
+- Task 11 completed with spec compliance and code quality review approval after adding exact host/subdomain platform classification, `youtu.be` support, lookalike host rejection, and malformed URL fallback handling. Verification: `python -m pytest tests/test_search_engine_connector.py -q` passed with 4 tests; `python -m pytest -q` passed with 49 tests and one third-party warning; `python -m ruff check app tests` passed.
