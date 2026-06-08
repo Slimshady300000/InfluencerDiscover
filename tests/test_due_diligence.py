@@ -62,6 +62,22 @@ def test_build_due_diligence_card_includes_recommendation_and_risk():
     assert card.suggested_contact == "business@example.com"
 
 
+def test_build_due_diligence_card_uses_fallbacks_for_blank_titles_no_contact_or_risks():
+    card = build_due_diligence_card(
+        creator_name="Creator B",
+        platform="TikTok",
+        follower_count=120000,
+        score=72.5,
+        content_titles=["", "   ", "\t"],
+        contact="",
+        risks=[],
+    )
+
+    assert card.representative_content == "No recent content samples stored."
+    assert card.risks == "No obvious risk found in stored data."
+    assert card.suggested_contact == "Use public DM entry if visible on the profile."
+
+
 def test_result_card_renders_persisted_due_diligence_data(client, db_session):
     creator = Creator(display_name="Creator A", primary_topics="skincare")
     account = PlatformAccount(

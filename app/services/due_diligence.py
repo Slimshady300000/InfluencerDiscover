@@ -20,8 +20,11 @@ def build_due_diligence_card(
     contact: str,
     risks: list[str],
 ) -> DueDiligenceCard:
+    normalized_content_titles = [title.strip() for title in content_titles if title.strip()]
     representative_content = (
-        " | ".join(content_titles[:5]) if content_titles else "No recent content samples stored."
+        " | ".join(normalized_content_titles[:5])
+        if normalized_content_titles
+        else "No recent content samples stored."
     )
     risk_text = " | ".join(risks) if risks else "No obvious risk found in stored data."
     recommendation = (
