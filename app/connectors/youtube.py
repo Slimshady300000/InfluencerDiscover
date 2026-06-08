@@ -1,4 +1,5 @@
 from collections.abc import Callable
+import re
 
 import httpx
 
@@ -10,6 +11,7 @@ from app.services.query_parser import SearchIntent
 class YouTubeConnector:
     name = "youtube"
     search_url = "https://www.googleapis.com/youtube/v3/search"
+    _ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
     def __init__(
         self,
@@ -64,6 +66,8 @@ class YouTubeConnector:
             channel_id = channel_id.strip()
             video_id = video_id.strip()
             if not channel_id or not video_id:
+                continue
+            if not self._ID_PATTERN.fullmatch(channel_id) or not self._ID_PATTERN.fullmatch(video_id):
                 continue
             channel_title = snippet.get("channelTitle", "Unknown YouTube Creator")
             description = snippet.get("description", "")

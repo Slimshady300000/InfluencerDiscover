@@ -133,10 +133,22 @@ def test_youtube_connector_skips_malformed_search_items():
                         "snippet": {"channelId": "channel-6"},
                     },
                     {
-                        "id": {"videoId": " video-7 "},
+                        "id": {"videoId": "video-7"},
+                        "snippet": {"channelId": "bad/channel"},
+                    },
+                    {
+                        "id": {"videoId": "abc&list=x"},
+                        "snippet": {"channelId": "channel-8"},
+                    },
+                    {
+                        "id": {"videoId": "abc?list=x"},
+                        "snippet": {"channelId": "channel-9"},
+                    },
+                    {
+                        "id": {"videoId": " video_10-ok "},
                         "snippet": {
-                            "channelId": " channel-7 ",
-                            "channelTitle": "Creator Seven",
+                            "channelId": " channel_10-ok ",
+                            "channelTitle": "Creator Ten",
                             "title": "Valid",
                         },
                     },
@@ -153,5 +165,5 @@ def test_youtube_connector_skips_malformed_search_items():
     candidates = connector.search(intent)
 
     assert len(candidates) == 1
-    assert candidates[0].profile_url == "https://www.youtube.com/channel/channel-7"
-    assert candidates[0].contents[0].content_url == "https://www.youtube.com/watch?v=video-7"
+    assert candidates[0].profile_url == "https://www.youtube.com/channel/channel_10-ok"
+    assert candidates[0].contents[0].content_url == "https://www.youtube.com/watch?v=video_10-ok"
