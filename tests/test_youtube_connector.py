@@ -15,13 +15,50 @@ def test_youtube_connector_builds_search_params():
 
 def test_youtube_connector_empty_api_key_returns_empty_without_calling_client():
     class FailingClient:
+        closed = False
+
         def get(self, *_args, **_kwargs):
             raise AssertionError("client should not be called without an API key")
 
-    connector = YouTubeConnector(api_key="", client=FailingClient())
+    client = FailingClient()
+    connector = YouTubeConnector(api_key="", client=client)
     intent = parse_search_input("skincare", [Platform.youtube])
 
     assert connector.search(intent) == []
+    connector.close()
+    assert client.closed is False
+
+
+def test_youtube_connector_closes_owned_client():
+    class FakeClient:
+        def __init__(self, timeout):
+            self.timeout = timeout
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+
+    connector = YouTubeConnector(api_key="key", client_factory=FakeClient)
+
+    connector.close()
+
+    assert connector.client.closed is True
+    assert connector.client.timeout == 20
+
+
+def test_youtube_connector_context_manager_closes_owned_client():
+    class FakeClient:
+        def __init__(self, timeout):
+            self.timeout = timeout
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+
+    with YouTubeConnector(api_key="key", client_factory=FakeClient) as connector:
+        client = connector.client
+
+    assert client.closed is True
 
 
 def test_youtube_connector_parses_search_payload():
@@ -70,3 +107,43 @@ def test_youtube_connector_parses_search_payload():
     assert candidate.contents[0].title == "Routine"
     assert candidate.contents[0].description == "Daily skincare routine"
     assert candidate.contacts == []
+
+
+def test_youtube_connector_skips_malformed_search_items():
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "items": [
+                    {"id": {"videoId": "missing-channel"}, "snippet": {"channelTitle": "No Channel"}},
+                    {
+                        "id": {},
+                        "snippet": {"channelId": "channel-2", "channelTitle": "No Video"},
+                    },
+                    {"id": "not-a-dict", "snippet": {"channelId": "channel-3"}},
+                    {"id": {"videoId": "video-4"}, "snippet": "not-a-dict"},
+                    {
+                        "id": {"videoId": "video-5"},
+                        "snippet": {
+                            "channelId": "channel-5",
+                            "channelTitle": "Creator Five",
+                            "title": "Valid",
+                        },
+                    },
+                ]
+            }
+
+    class FakeClient:
+        def get(self, _url, params):
+            return FakeResponse()
+
+    connector = YouTubeConnector(api_key="key", client=FakeClient())
+    intent = parse_search_input("skincare", [Platform.youtube])
+
+    candidates = connector.search(intent)
+
+    assert len(candidates) == 1
+    assert candidates[0].profile_url == "https://www.youtube.com/channel/channel-5"
+    assert candidates[0].contents[0].content_url == "https://www.youtube.com/watch?v=video-5"
