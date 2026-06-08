@@ -24,4 +24,5 @@ def test_extract_platform_from_url_rejects_lookalike_hosts():
 def test_extract_platform_from_url_returns_web_for_unknown_or_malformed_urls():
     assert extract_platform_from_url("https://example.com/creator") == Platform.web
     assert extract_platform_from_url("not a url") == Platform.web
+    assert extract_platform_from_url("http://[::1") == Platform.web
     assert extract_platform_from_url("") == Platform.web

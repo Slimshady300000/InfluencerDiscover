@@ -11,11 +11,16 @@ _PLATFORM_DOMAINS: tuple[tuple[Platform, tuple[str, ...]], ...] = (
 
 
 def extract_platform_from_url(url: str) -> Platform:
-    parsed = urlparse(url)
-    if not parsed.hostname:
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+    except ValueError:
         return Platform.web
 
-    host = parsed.hostname.lower().rstrip(".")
+    if not hostname:
+        return Platform.web
+
+    host = hostname.lower().rstrip(".")
     for platform, domains in _PLATFORM_DOMAINS:
         if any(_is_host_or_subdomain(host, domain) for domain in domains):
             return platform
