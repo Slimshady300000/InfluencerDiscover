@@ -59,6 +59,10 @@ class YouTubeConnector:
                 continue
             channel_id = snippet.get("channelId", "")
             video_id = item_id.get("videoId", "")
+            if not isinstance(channel_id, str) or not isinstance(video_id, str):
+                continue
+            channel_id = channel_id.strip()
+            video_id = video_id.strip()
             if not channel_id or not video_id:
                 continue
             channel_title = snippet.get("channelTitle", "Unknown YouTube Creator")
