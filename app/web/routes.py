@@ -4,6 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from app.db import get_session
+from app.jobs.queue import get_queue
+from app.jobs.worker import run_search_task_job
 from app.models import Creator, FollowUp, PlatformAccount, ScoreResult, SearchTask, TaskStatus, utc_now
 from app.services.due_diligence import build_due_diligence_card
 from app.services.exporter import build_candidate_workbook
@@ -23,6 +25,7 @@ def search_page(request: Request, session: Session = Depends(get_session)):
 def create_search_task(
     input_text: str = Form(min_length=1),
     platforms: list[str] = Form(default=["youtube"]),
+    run_inline: list[str] = Form(default=["yes"]),
     session: Session = Depends(get_session),
 ):
     task = SearchTask(
@@ -35,7 +38,10 @@ def create_search_task(
     session.commit()
     session.refresh(task)
     try:
-        run_search_task(session, task.id)
+        if "yes" in run_inline:
+            run_search_task(session, task.id)
+        else:
+            get_queue().enqueue(run_search_task_job, task.id)
     except Exception as exc:
         session.rollback()
         failed_task = session.get(SearchTask, task.id)
