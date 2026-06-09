@@ -56,6 +56,26 @@ def test_homepage_returns_search_screen(client):
     assert "Start Search" in response.text
 
 
+def test_homepage_uses_polished_search_ui(client, db_session):
+    db_session.add(
+        SearchTask(
+            input_text="skincare",
+            input_type="keyword",
+            platforms="youtube,tiktok,instagram",
+            status=TaskStatus.complete,
+        )
+    )
+    db_session.commit()
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert 'class="hero-panel"' in response.text
+    assert 'class="platform-option"' in response.text
+    assert 'class="primary-button"' in response.text
+    assert 'class="status-badge status-complete"' in response.text
+
+
 def test_create_search_task_redirects_to_task_page(client, monkeypatch):
     monkeypatch.setattr(routes, "run_search_task", lambda _session, _task_id: None)
     response = client.post(

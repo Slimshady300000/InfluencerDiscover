@@ -5,6 +5,7 @@ from sqlmodel import Session
 
 from app.connectors.base import RawCandidate
 from app.connectors.manual import ManualConnector
+from app.connectors.search_engine import SearchEngineConnector
 from app.connectors.youtube import YouTubeConnector
 from app.config import get_settings
 from app.models import (
@@ -80,7 +81,9 @@ def collect_raw_candidates(intent: SearchIntent) -> list[RawCandidate]:
     live_platforms: set[Platform] = set()
     settings = get_settings()
 
-    if Platform.youtube in intent.platforms and settings.youtube_api_key:
+    requested_platforms = intent.platforms or [Platform.youtube]
+
+    if Platform.youtube in requested_platforms and settings.youtube_api_key:
         try:
             with YouTubeConnector(api_key=settings.youtube_api_key) as connector:
                 youtube_candidates = connector.search(intent)
@@ -90,19 +93,37 @@ def collect_raw_candidates(intent: SearchIntent) -> list[RawCandidate]:
             candidates.extend(youtube_candidates)
             live_platforms.add(Platform.youtube)
 
-    fallback_platforms = [platform for platform in (intent.platforms or [Platform.youtube]) if platform not in live_platforms]
+    search_platforms = [platform for platform in requested_platforms if platform not in live_platforms]
+    if search_platforms and settings.search_engine_api_key and settings.search_engine_id:
+        search_intent = _intent_for_platforms(intent, search_platforms)
+        try:
+            search_candidates = SearchEngineConnector(
+                api_key=settings.search_engine_api_key,
+                search_engine_id=settings.search_engine_id,
+            ).search(search_intent)
+        except Exception:
+            search_candidates = []
+        if search_candidates:
+            candidates.extend(search_candidates)
+            live_platforms.update(candidate.platform for candidate in search_candidates)
+
+    fallback_platforms = [platform for platform in requested_platforms if platform not in live_platforms]
     if fallback_platforms:
-        fallback_intent = SearchIntent(
-            input_text=intent.input_text,
-            input_type=intent.input_type,
-            platforms=fallback_platforms,
-            core_terms=intent.core_terms,
-            expanded_terms=intent.expanded_terms,
-            seed_urls=intent.seed_urls,
-        )
+        fallback_intent = _intent_for_platforms(intent, fallback_platforms)
         candidates.extend(ManualConnector().search(fallback_intent))
 
     return candidates
+
+
+def _intent_for_platforms(intent: SearchIntent, platforms: list[Platform]) -> SearchIntent:
+    return SearchIntent(
+        input_text=intent.input_text,
+        input_type=intent.input_type,
+        platforms=platforms,
+        core_terms=intent.core_terms,
+        expanded_terms=intent.expanded_terms,
+        seed_urls=intent.seed_urls,
+    )
 
 
 def _persist_candidate(session: Session, candidate: RawCandidate) -> tuple[RawCandidate, int, int]:

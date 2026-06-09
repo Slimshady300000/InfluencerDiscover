@@ -24,6 +24,23 @@ and does not publish Redis to the host. For shared internal use, run it behind
 your company VPN or reverse proxy and set `ACCESS_USERNAME` plus `ACCESS_PASSWORD`
 in `.env` to enable browser HTTP Basic Auth.
 
+## External Search APIs
+
+The app works without API keys by using deterministic fallback candidates for local
+review. For real public discovery, configure these values in `.env`:
+
+```powershell
+YOUTUBE_API_KEY=your-youtube-data-api-key
+SEARCH_ENGINE_API_KEY=your-google-custom-search-json-api-key
+SEARCH_ENGINE_ID=your-programmable-search-engine-id
+```
+
+`YOUTUBE_API_KEY` enables YouTube Data API search for YouTube candidates.
+`SEARCH_ENGINE_API_KEY` plus `SEARCH_ENGINE_ID` enables cross-platform public
+link discovery across YouTube, TikTok, and Instagram profile/result pages. TikTok
+and Instagram are discovered through public search results in this MVP, not
+through private scraping or unofficial platform APIs.
+
 ## Verification
 
 ```powershell

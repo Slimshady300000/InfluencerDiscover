@@ -53,6 +53,7 @@ def test_acceptance_search_to_results_to_export_and_card(client):
     assert "Creator A" in detail_response.text
     assert "Creator B" in detail_response.text
     assert "Creator C" in detail_response.text
+    assert detail_response.text.count("Review card") >= 24
     assert "/export.xlsx" in detail_response.text
     assert "/results/" in detail_response.text
     assert "/card" in detail_response.text
@@ -65,16 +66,11 @@ def test_acceptance_search_to_results_to_export_and_card(client):
     workbook = load_workbook(BytesIO(export_response.content))
     sheet = workbook.active
     assert sheet["A1"].value == "Creator"
-    assert {sheet["A2"].value, sheet["A3"].value, sheet["A4"].value} == {
-        "Creator A",
-        "Creator B",
-        "Creator C",
-    }
-    assert {sheet["B2"].value, sheet["B3"].value, sheet["B4"].value} == {
-        "youtube",
-        "tiktok",
-        "instagram",
-    }
+    assert sheet.max_row >= 25
+    exported_names = {sheet.cell(row=row, column=1).value for row in range(2, sheet.max_row + 1)}
+    exported_platforms = {sheet.cell(row=row, column=2).value for row in range(2, sheet.max_row + 1)}
+    assert {"Creator A", "Creator B", "Creator C"}.issubset(exported_names)
+    assert exported_platforms == {"youtube", "tiktok", "instagram"}
 
     card_path = _extract_first_card_path(detail_response.text)
     card_response = client.get(card_path)

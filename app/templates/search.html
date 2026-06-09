@@ -1,23 +1,40 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="panel">
-  <h1>Search creator candidates</h1>
+<section class="hero-panel">
+  <div class="hero-copy">
+    <p class="eyebrow">Overseas influencer discovery</p>
+    <h1>Search creator candidates</h1>
+    <p class="hero-subtitle">Enter a topic, brand brief, or seed creator URL to build a ranked review list.</p>
+  </div>
   <form method="post" action="/search" class="search-form">
-    <input name="input_text" required aria-label="Keyword, brand brief, or seed creator URL">
-    <label><input type="checkbox" name="platforms" value="youtube" checked> YouTube</label>
-    <label><input type="checkbox" name="platforms" value="tiktok"> TikTok</label>
-    <label><input type="checkbox" name="platforms" value="instagram"> Instagram</label>
+    <div class="search-row">
+      <input name="input_text" required aria-label="Keyword, brand brief, or seed creator URL" placeholder="e.g. skincare for sensitive skin, gaming headset, travel creator">
+      <button type="submit" class="primary-button">Start Search</button>
+    </div>
+    <div class="platform-row" aria-label="Platforms">
+      <label class="platform-option"><input type="checkbox" name="platforms" value="youtube" checked> YouTube</label>
+      <label class="platform-option"><input type="checkbox" name="platforms" value="tiktok"> TikTok</label>
+      <label class="platform-option"><input type="checkbox" name="platforms" value="instagram"> Instagram</label>
+    </div>
     <input type="hidden" name="run_inline" value="no">
-    <label><input type="checkbox" name="run_inline" value="yes" checked> Run inline for local MVP</label>
-    <button type="submit">Start Search</button>
+    <label class="inline-toggle"><input type="checkbox" name="run_inline" value="yes" checked> Run inline for local MVP</label>
   </form>
 </section>
 <section class="panel">
-  <h2>Recent tasks</h2>
-  <table>
+  <div class="section-header">
+    <div>
+      <p class="eyebrow">History</p>
+      <h2>Recent tasks</h2>
+    </div>
+  </div>
+  <table class="data-table">
     <tr><th>ID</th><th>Input</th><th>Status</th></tr>
     {% for task in tasks %}
-      <tr><td><a href="/tasks/{{ task.id }}">{{ task.id }}</a></td><td>{{ task.input_text }}</td><td>{{ task.status }}</td></tr>
+      <tr>
+        <td><a class="table-link" href="/tasks/{{ task.id }}">#{{ task.id }}</a></td>
+        <td>{{ task.input_text }}</td>
+        <td><span class="status-badge status-{{ task.status }}">{{ task.status }}</span></td>
+      </tr>
     {% endfor %}
   </table>
 </section>

@@ -1,15 +1,25 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="panel">
-  <h1>Search task #{{ task.id }}</h1>
-  <p>Status: {{ task.status }}</p>
+<section class="panel task-panel">
+  <div class="section-header">
+    <div>
+      <p class="eyebrow">Candidate review</p>
+      <h1>Search task #{{ task.id }}</h1>
+    </div>
+    <span class="status-badge status-{{ task.status }}">{{ task.status }}</span>
+  </div>
   {% if task.error_summary %}
-    <p>Error: {{ task.error_summary }}</p>
+    <p class="alert">Error: {{ task.error_summary }}</p>
   {% endif %}
-  <p>Input: {{ task.input_text }}</p>
-  <p>Ranked mainly by recent views, engagement, followers, topic fit, and contactability.</p>
-  <p><a href="/tasks/{{ task.id }}/export.xlsx">Export Excel</a></p>
-  <table>
+  <div class="task-toolbar">
+    <div>
+      <span class="label">Input</span>
+      <strong>{{ task.input_text }}</strong>
+    </div>
+    <a class="secondary-button" href="/tasks/{{ task.id }}/export.xlsx">Export Excel</a>
+  </div>
+  <p class="helper-text">Ranked mainly by recent views, engagement, followers, topic fit, and contactability.</p>
+  <table class="data-table result-table">
     <tr>
       <th>Creator</th>
       <th>Platform</th>
@@ -30,21 +40,21 @@
       {% set account = row.account %}
       {% set follow_up = row.follow_up %}
       <tr>
-        <td>{{ creator.display_name if creator else '' }}</td>
-        <td>{{ account.platform.value if account else '' }}</td>
+        <td><strong>{{ creator.display_name if creator else '' }}</strong></td>
+        <td><span class="platform-badge platform-{{ account.platform.value if account else 'unknown' }}">{{ account.platform.value if account else '' }}</span></td>
         <td>
           {% if account and account.profile_url %}
             <a href="{{ account.profile_url }}">{{ account.profile_url }}</a>
           {% endif %}
         </td>
-        <td>{{ account.follower_count if account else 0 }}</td>
-        <td>{{ row.average_views }}</td>
+        <td class="metric">{{ account.follower_count if account else 0 }}</td>
+        <td class="metric">{{ row.average_views }}</td>
         <td>{{ row.engagement_rate_label }}</td>
-        <td>{{ result.final_score }}</td>
+        <td class="score-cell">{{ "%.1f"|format(result.final_score) }}</td>
         <td>{{ row.contact }}</td>
         <td>{{ result.reasons }}</td>
         <td>{{ result.risks }}</td>
-        <td><a href="/results/{{ result.id }}/card">Review card</a></td>
+        <td><a class="secondary-button small-button" href="/results/{{ result.id }}/card">Review card</a></td>
         <td>
           <form method="post" action="/creators/{{ result.creator_id }}/follow-up" class="follow-up-form">
             <input type="hidden" name="task_id" value="{{ task.id }}">
@@ -52,7 +62,7 @@
             <input name="status" aria-label="Status" placeholder="Status" value="{{ follow_up.status if follow_up else '' }}">
             <input name="tags" aria-label="Tags" placeholder="Tags" value="{{ follow_up.tags if follow_up else '' }}">
             <textarea name="notes" aria-label="Notes" placeholder="Notes">{{ follow_up.notes if follow_up else '' }}</textarea>
-            <button type="submit">Save</button>
+            <button type="submit" class="secondary-button small-button">Save</button>
           </form>
         </td>
       </tr>
