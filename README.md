@@ -19,7 +19,10 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Open `http://localhost:8000`.
+Open `http://localhost:8000`. The compose file binds the web service to `127.0.0.1`
+and does not publish Redis to the host. For shared internal use, run it behind
+your company VPN or reverse proxy and set `ACCESS_USERNAME` plus `ACCESS_PASSWORD`
+in `.env` to enable browser HTTP Basic Auth.
 
 ## Verification
 

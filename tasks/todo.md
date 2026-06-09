@@ -22,8 +22,8 @@
 - [x] Execute Task 14: End-To-End Verification.
 - [x] Execute Task 15: Multi-Platform Candidate Discovery Remediation.
 - [x] Execute Task 16: Manager-Usable Candidate Table Remediation.
-- [ ] Execute Task 17: Internal Access Guardrails Remediation.
-- [ ] Execute Task 18: Excel Formula Injection Guard Remediation.
+- [x] Execute Task 17: Internal Access Guardrails Remediation.
+- [x] Execute Task 18: Excel Formula Injection Guard Remediation.
 - [ ] Execute Task 19: Final Remediation Verification And Review.
 
 ## Review
@@ -48,3 +48,5 @@
 - Final implementation review failed on MVP readiness blockers: cross-platform searches only persisted the first selected platform, task detail did not show manager-ready candidate fields, and deployment had no access guardrails. Added remediation plan `docs/superpowers/plans/2026-06-09-final-review-remediation.md`.
 - Task 15 completed after adding failing tests for selected-platform coverage, updating the manual fallback connector to return one deterministic candidate per selected platform, and adding `collect_raw_candidates()` for opportunistic YouTube live data plus fallback gap filling. Verification: targeted red tests failed before the fix, then `python -m pytest tests/test_search_runner.py -q` passed with 6 tests; `python -m ruff check app\connectors\manual.py app\services\search_runner.py tests\test_search_runner.py` passed.
 - Task 16 completed after adding a failing task-detail route test for manager-ready fields and updating the task detail route/template to show creator name, platform, profile link, followers, average views, engagement rate, score, contact, reasons, risks, card, and follow-up controls. Verification: the route test failed before the fix, then `python -m pytest tests/test_acceptance.py tests/test_search_runner.py tests/test_web.py -q` passed with 14 tests and one third-party warning; `python -m ruff check app tests` passed.
+- Task 17 completed after adding failing Basic Auth tests, optional `ACCESS_USERNAME`/`ACCESS_PASSWORD` settings, HTTP Basic Auth middleware, loopback-only web port publishing, no host Redis port, README deployment notes, and a compose boundary test. Verification: the configured-auth test failed before the fix, then `python -m pytest tests/test_security.py tests/test_deployment_config.py tests/test_exporter.py -q` passed with 8 tests and one third-party warning; `python -m ruff check app tests` passed.
+- Task 18 completed after adding a failing exporter test for formula-like text values and escaping `=`, `+`, `-`, and `@` prefixed strings before writing workbook cells. Verification: the targeted exporter test failed before the fix, then `python -m pytest tests/test_exporter.py -q` passed with 4 tests and one third-party warning; `python -m ruff check app\services\exporter.py tests\test_exporter.py` passed.

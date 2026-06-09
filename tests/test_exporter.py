@@ -77,6 +77,38 @@ def test_build_candidate_workbook_contains_expected_headers():
     assert sheet["G2"].value == "business@example.com"
 
 
+def test_build_candidate_workbook_escapes_formula_like_text_values():
+    data = [
+        {
+            "creator": "=HYPERLINK(\"https://example.com\")",
+            "platform": "youtube",
+            "followers": 310000,
+            "recent_views": 96000,
+            "engagement_rate": 0.071,
+            "score": 87.0,
+            "contact": "@attacker",
+        },
+        {
+            "creator": "+SUM(1,1)",
+            "platform": "tiktok",
+            "followers": 420000,
+            "recent_views": 185000,
+            "engagement_rate": 0.08,
+            "score": 91.0,
+            "contact": "-cmd",
+        },
+    ]
+
+    payload = build_candidate_workbook(data)
+    workbook = load_workbook(BytesIO(payload))
+    sheet = workbook.active
+
+    assert sheet["A2"].value == "'=HYPERLINK(\"https://example.com\")"
+    assert sheet["G2"].value == "'@attacker"
+    assert sheet["A3"].value == "'+SUM(1,1)"
+    assert sheet["G3"].value == "'-cmd"
+
+
 def test_export_task_returns_candidate_workbook_with_persisted_metrics(client, db_session):
     creator = Creator(display_name="Creator A", primary_topics="skincare")
     account = PlatformAccount(
