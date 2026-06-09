@@ -140,6 +140,9 @@ def test_export_task_returns_candidate_workbook_with_persisted_metrics(client, d
             account_id=account.id,
             content_url="https://example.com/video-1",
             view_count=1000,
+            like_count=80,
+            comment_count=20,
+            share_count=10,
         )
     )
     db_session.add(
@@ -147,6 +150,9 @@ def test_export_task_returns_candidate_workbook_with_persisted_metrics(client, d
             account_id=account.id,
             content_url="https://example.com/video-2",
             view_count=2000,
+            like_count=160,
+            comment_count=40,
+            share_count=20,
         )
     )
     db_session.add(
@@ -176,6 +182,7 @@ def test_export_task_returns_candidate_workbook_with_persisted_metrics(client, d
     assert sheet["A2"].value == "Creator A"
     assert sheet["B2"].value == "youtube"
     assert sheet["D2"].value == 1500
+    assert sheet["E2"].value == 0.11
     assert sheet["F2"].value == 87.0
     assert sheet["G2"].value == "business@example.com"
 

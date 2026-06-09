@@ -76,15 +76,13 @@ def export_task(task_id: int, session: Session = Depends(get_session)):
         creator = session.get(Creator, result.creator_id)
         account = session.get(PlatformAccount, result.platform_account_id)
         contact = creator.contacts[0].value if creator and creator.contacts else ""
-        view_counts = [sample.view_count for sample in account.content_samples] if account else []
-        recent_views = sum(view_counts) // len(view_counts) if view_counts else 0
         rows.append(
             {
                 "creator": creator.display_name if creator else "",
                 "platform": account.platform.value if account else "",
                 "followers": account.follower_count if account else 0,
-                "recent_views": recent_views,
-                "engagement_rate": result.normalized_engagement,
+                "recent_views": _average_recent_views(account),
+                "engagement_rate": _engagement_rate(account),
                 "score": result.final_score,
                 "contact": contact,
             }
