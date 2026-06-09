@@ -19,7 +19,7 @@
 - [x] Execute Task 11: Search Engine Connector For Cross-Platform Candidate Links.
 - [x] Execute Task 12: Queue And Worker.
 - [x] Execute Task 13: Docker Compose Deployment.
-- [ ] Execute Task 14: End-To-End Verification.
+- [x] Execute Task 14: End-To-End Verification.
 
 ## Review
 - Implementation plan saved to `docs/superpowers/plans/2026-06-03-influencer-discovery-mvp-implementation.md`.
@@ -39,3 +39,4 @@
 - Task 11 completed with spec compliance and code quality review approval after adding exact host/subdomain platform classification, `youtu.be` support, lookalike host rejection, and malformed URL fallback handling. Verification: `python -m pytest tests/test_search_engine_connector.py -q` passed with 4 tests; `python -m pytest -q` passed with 49 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 12 completed with spec compliance and code quality review approval after adding RQ queue helpers, a worker entry point, inline-by-default search execution, and a queue branch that can be tested without Redis. Verification: `python -m pytest tests/test_queue.py -q` passed with 3 tests and one third-party warning; `python -m pytest -q` passed with 52 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 13 completed with spec compliance and code quality review approval after adding Dockerfile, Docker Compose services, README startup instructions, and `.dockerignore` build-context protection. Verification: `python -m pytest -q` passed with 52 tests and one third-party warning; `python -m ruff check app tests` passed; static compose parsing passed. Docker CLI was unavailable locally, so `docker compose config` could not be run.
+- Task 14 completed with spec compliance and code quality review approval after adding end-to-end acceptance coverage, task detail export/card links, README verification commands, and manual smoke-check instructions. Verification: `python -m pytest tests/test_acceptance.py -q` passed with 1 test and one third-party warning; `python -m pytest -q` passed with 53 tests and one third-party warning; `python -m ruff check .` passed; Playwright manually verified search, task detail, Excel download, and due diligence card rendering. Docker CLI remained unavailable for compose runtime validation.
