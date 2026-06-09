@@ -10,12 +10,38 @@
   <p>Ranked mainly by recent views, engagement, followers, topic fit, and contactability.</p>
   <p><a href="/tasks/{{ task.id }}/export.xlsx">Export Excel</a></p>
   <table>
-    <tr><th>Creator ID</th><th>Score</th><th>Reasons</th><th>Risks</th><th>Card</th><th>Follow-up</th></tr>
-    {% for result in task.results %}
-      {% set follow_up = result.creator.follow_ups[0] if result.creator.follow_ups else none %}
+    <tr>
+      <th>Creator</th>
+      <th>Platform</th>
+      <th>Profile</th>
+      <th>Followers</th>
+      <th>Avg Views</th>
+      <th>Engagement Rate</th>
+      <th>Score</th>
+      <th>Contact</th>
+      <th>Reasons</th>
+      <th>Risks</th>
+      <th>Card</th>
+      <th>Follow-up</th>
+    </tr>
+    {% for row in result_rows %}
+      {% set result = row.result %}
+      {% set creator = row.creator %}
+      {% set account = row.account %}
+      {% set follow_up = row.follow_up %}
       <tr>
-        <td>{{ result.creator_id }}</td>
+        <td>{{ creator.display_name if creator else '' }}</td>
+        <td>{{ account.platform.value if account else '' }}</td>
+        <td>
+          {% if account and account.profile_url %}
+            <a href="{{ account.profile_url }}">{{ account.profile_url }}</a>
+          {% endif %}
+        </td>
+        <td>{{ account.follower_count if account else 0 }}</td>
+        <td>{{ row.average_views }}</td>
+        <td>{{ row.engagement_rate_label }}</td>
         <td>{{ result.final_score }}</td>
+        <td>{{ row.contact }}</td>
         <td>{{ result.reasons }}</td>
         <td>{{ result.risks }}</td>
         <td><a href="/results/{{ result.id }}/card">Review card</a></td>

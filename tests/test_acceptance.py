@@ -36,7 +36,11 @@ def client(session_engine, monkeypatch):
 def test_acceptance_search_to_results_to_export_and_card(client):
     create_response = client.post(
         "/search",
-        data={"input_text": "skincare", "platforms": ["youtube"], "run_inline": "yes"},
+        data={
+            "input_text": "skincare",
+            "platforms": ["youtube", "tiktok", "instagram"],
+            "run_inline": "yes",
+        },
         follow_redirects=False,
     )
     assert create_response.status_code in {302, 303}
@@ -46,6 +50,9 @@ def test_acceptance_search_to_results_to_export_and_card(client):
     assert detail_response.status_code == 200
     assert "Search task" in detail_response.text
     assert "Ranked mainly by recent views" in detail_response.text
+    assert "Creator A" in detail_response.text
+    assert "Creator B" in detail_response.text
+    assert "Creator C" in detail_response.text
     assert "/export.xlsx" in detail_response.text
     assert "/results/" in detail_response.text
     assert "/card" in detail_response.text
@@ -58,12 +65,21 @@ def test_acceptance_search_to_results_to_export_and_card(client):
     workbook = load_workbook(BytesIO(export_response.content))
     sheet = workbook.active
     assert sheet["A1"].value == "Creator"
-    assert sheet["A2"].value == "Creator A"
+    assert {sheet["A2"].value, sheet["A3"].value, sheet["A4"].value} == {
+        "Creator A",
+        "Creator B",
+        "Creator C",
+    }
+    assert {sheet["B2"].value, sheet["B3"].value, sheet["B4"].value} == {
+        "youtube",
+        "tiktok",
+        "instagram",
+    }
 
     card_path = _extract_first_card_path(detail_response.text)
     card_response = client.get(card_path)
     assert card_response.status_code == 200
-    assert "Creator A" in card_response.text
+    assert any(name in card_response.text for name in {"Creator A", "Creator B", "Creator C"})
     assert "Recommendation:" in card_response.text
 
 

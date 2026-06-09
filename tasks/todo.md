@@ -20,6 +20,11 @@
 - [x] Execute Task 12: Queue And Worker.
 - [x] Execute Task 13: Docker Compose Deployment.
 - [x] Execute Task 14: End-To-End Verification.
+- [x] Execute Task 15: Multi-Platform Candidate Discovery Remediation.
+- [x] Execute Task 16: Manager-Usable Candidate Table Remediation.
+- [ ] Execute Task 17: Internal Access Guardrails Remediation.
+- [ ] Execute Task 18: Excel Formula Injection Guard Remediation.
+- [ ] Execute Task 19: Final Remediation Verification And Review.
 
 ## Review
 - Implementation plan saved to `docs/superpowers/plans/2026-06-03-influencer-discovery-mvp-implementation.md`.
@@ -40,3 +45,6 @@
 - Task 12 completed with spec compliance and code quality review approval after adding RQ queue helpers, a worker entry point, inline-by-default search execution, and a queue branch that can be tested without Redis. Verification: `python -m pytest tests/test_queue.py -q` passed with 3 tests and one third-party warning; `python -m pytest -q` passed with 52 tests and one third-party warning; `python -m ruff check app tests` passed.
 - Task 13 completed with spec compliance and code quality review approval after adding Dockerfile, Docker Compose services, README startup instructions, and `.dockerignore` build-context protection. Verification: `python -m pytest -q` passed with 52 tests and one third-party warning; `python -m ruff check app tests` passed; static compose parsing passed. Docker CLI was unavailable locally, so `docker compose config` could not be run.
 - Task 14 completed with spec compliance and code quality review approval after adding end-to-end acceptance coverage, task detail export/card links, README verification commands, and manual smoke-check instructions. Verification: `python -m pytest tests/test_acceptance.py -q` passed with 1 test and one third-party warning; `python -m pytest -q` passed with 53 tests and one third-party warning; `python -m ruff check .` passed; Playwright manually verified search, task detail, Excel download, and due diligence card rendering. Docker CLI remained unavailable for compose runtime validation.
+- Final implementation review failed on MVP readiness blockers: cross-platform searches only persisted the first selected platform, task detail did not show manager-ready candidate fields, and deployment had no access guardrails. Added remediation plan `docs/superpowers/plans/2026-06-09-final-review-remediation.md`.
+- Task 15 completed after adding failing tests for selected-platform coverage, updating the manual fallback connector to return one deterministic candidate per selected platform, and adding `collect_raw_candidates()` for opportunistic YouTube live data plus fallback gap filling. Verification: targeted red tests failed before the fix, then `python -m pytest tests/test_search_runner.py -q` passed with 6 tests; `python -m ruff check app\connectors\manual.py app\services\search_runner.py tests\test_search_runner.py` passed.
+- Task 16 completed after adding a failing task-detail route test for manager-ready fields and updating the task detail route/template to show creator name, platform, profile link, followers, average views, engagement rate, score, contact, reasons, risks, card, and follow-up controls. Verification: the route test failed before the fix, then `python -m pytest tests/test_acceptance.py tests/test_search_runner.py tests/test_web.py -q` passed with 14 tests and one third-party warning; `python -m ruff check app tests` passed.

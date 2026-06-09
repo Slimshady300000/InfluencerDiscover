@@ -58,7 +58,11 @@ def task_detail(task_id: int, request: Request, session: Session = Depends(get_s
     task = session.get(SearchTask, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Search task not found")
-    return templates.TemplateResponse(request, "task_detail.html", {"task": task})
+    return templates.TemplateResponse(
+        request,
+        "task_detail.html",
+        {"task": task, "result_rows": _build_task_result_rows(task)},
+    )
 
 
 @router.get("/tasks/{task_id}/export.xlsx")
@@ -150,3 +154,48 @@ def update_follow_up(
     session.commit()
 
     return RedirectResponse(url=f"/tasks/{task_id}", status_code=303)
+
+
+def _build_task_result_rows(task: SearchTask) -> list[dict]:
+    rows = []
+    for result in sorted(task.results, key=lambda item: item.final_score, reverse=True):
+        creator = result.creator
+        account = result.platform_account
+        contact = _first_contact(creator)
+        follow_up = creator.follow_ups[0] if creator and creator.follow_ups else None
+        rows.append(
+            {
+                "result": result,
+                "creator": creator,
+                "account": account,
+                "contact": contact,
+                "average_views": _average_recent_views(account),
+                "engagement_rate_label": f"{_engagement_rate(account):.2%}",
+                "follow_up": follow_up,
+            }
+        )
+    return rows
+
+
+def _first_contact(creator: Creator | None) -> str:
+    if creator is None or not creator.contacts:
+        return ""
+    return creator.contacts[0].value
+
+
+def _average_recent_views(account: PlatformAccount | None) -> int:
+    if account is None or not account.content_samples:
+        return 0
+    views = [sample.view_count for sample in account.content_samples]
+    return sum(views) // len(views)
+
+
+def _engagement_rate(account: PlatformAccount | None) -> float:
+    if account is None or not account.content_samples:
+        return 0.0
+    views = sum(sample.view_count for sample in account.content_samples)
+    interactions = sum(
+        sample.like_count + sample.comment_count + sample.share_count
+        for sample in account.content_samples
+    )
+    return interactions / max(views, 1)

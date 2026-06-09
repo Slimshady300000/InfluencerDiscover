@@ -5,7 +5,17 @@ from sqlmodel import Session, SQLModel, create_engine, select
 from app.config import Settings
 from app.db import get_session
 import app.main as main_module
-from app.models import Creator, FollowUp, Platform, PlatformAccount, ScoreResult, SearchTask, TaskStatus
+from app.models import (
+    ContactRecord,
+    ContentSample,
+    Creator,
+    FollowUp,
+    Platform,
+    PlatformAccount,
+    ScoreResult,
+    SearchTask,
+    TaskStatus,
+)
 from app.web import routes
 
 
@@ -61,6 +71,71 @@ def test_task_detail_returns_404_for_missing_task(client):
     response = client.get("/tasks/999")
 
     assert response.status_code == 404
+
+
+def test_task_detail_shows_manager_candidate_fields(client, db_session):
+    creator = Creator(display_name="Creator A", primary_topics="skincare")
+    account = PlatformAccount(
+        creator=creator,
+        platform=Platform.youtube,
+        handle="@creator_a",
+        profile_url="https://www.youtube.com/@creator_a",
+        follower_count=310000,
+    )
+    task = SearchTask(
+        input_text="skincare",
+        input_type="keyword",
+        platforms="youtube",
+        status=TaskStatus.complete,
+    )
+    db_session.add(account)
+    db_session.add(task)
+    db_session.flush()
+    db_session.add(
+        ContactRecord(
+            creator_id=creator.id,
+            contact_type="email",
+            value="business@example.com",
+            source_url="https://www.youtube.com/@creator_a",
+        )
+    )
+    db_session.add(
+        ContentSample(
+            account_id=account.id,
+            content_url="https://www.youtube.com/watch?v=1",
+            view_count=1000,
+            like_count=80,
+            comment_count=20,
+            share_count=10,
+        )
+    )
+    db_session.add(
+        ScoreResult(
+            task_id=task.id,
+            creator_id=creator.id,
+            platform_account_id=account.id,
+            final_score=0.91,
+        )
+    )
+    db_session.commit()
+
+    response = client.get(f"/tasks/{task.id}")
+
+    assert response.status_code == 200
+    assert "Creator" in response.text
+    assert "Platform" in response.text
+    assert "Profile" in response.text
+    assert "Followers" in response.text
+    assert "Avg Views" in response.text
+    assert "Engagement Rate" in response.text
+    assert "Contact" in response.text
+    assert "Creator A" in response.text
+    assert "youtube" in response.text
+    assert "https://www.youtube.com/@creator_a" in response.text
+    assert "310000" in response.text
+    assert "1000" in response.text
+    assert "11.00%" in response.text
+    assert "business@example.com" in response.text
 
 
 def test_create_search_task_redirects_when_runner_marks_failed(

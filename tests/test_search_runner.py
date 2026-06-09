@@ -28,6 +28,20 @@ def test_manual_connector_returns_candidates():
     assert candidates[0].handle.startswith("@")
 
 
+def test_manual_connector_returns_candidate_for_each_selected_platform():
+    intent = parse_search_input("skincare", [Platform.youtube, Platform.tiktok, Platform.instagram])
+    connector = ManualConnector()
+
+    candidates = connector.search(intent)
+
+    assert [candidate.platform for candidate in candidates] == [
+        Platform.youtube,
+        Platform.tiktok,
+        Platform.instagram,
+    ]
+    assert len({candidate.profile_url for candidate in candidates}) == 3
+
+
 def test_run_search_task_persists_candidates_and_scores():
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
@@ -56,6 +70,32 @@ def test_run_search_task_persists_candidates_and_scores():
         assert contents[0].title == "Hydrating serum review"
         assert len(contacts) == 1
         assert contacts[0].value == "business@example.com"
+
+
+def test_run_search_task_persists_candidates_for_each_selected_platform():
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        task = SearchTask(
+            input_text="skincare",
+            input_type="keyword",
+            platforms="youtube,tiktok,instagram",
+            status=TaskStatus.queued,
+        )
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+
+        run_search_task(session, task.id)
+
+        accounts = session.exec(select(PlatformAccount)).all()
+        results = session.exec(select(ScoreResult)).all()
+        assert {account.platform for account in accounts} == {
+            Platform.youtube,
+            Platform.tiktok,
+            Platform.instagram,
+        }
+        assert len(results) == 3
 
 
 def test_run_search_task_rolls_back_candidate_rows_when_scoring_fails(monkeypatch):
