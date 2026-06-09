@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 .env
 data/
+output/
 .pytest_cache/
 .ruff_cache/
 .playwright-cli/

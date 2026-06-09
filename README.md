@@ -20,3 +20,10 @@ docker compose up --build
 ```
 
 Open `http://localhost:8000`.
+
+## Verification
+
+```powershell
+python -m pytest -q
+python -m ruff check app tests
+```
