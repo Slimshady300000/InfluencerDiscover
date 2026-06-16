@@ -10,7 +10,7 @@ def build_candidate_workbook(rows: list[dict]) -> bytes:
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Candidates"
-    headers = ["Creator", "Platform", "Followers", "Recent Views", "Engagement Rate", "Score", "Contact"]
+    headers = ["达人", "平台", "粉丝数", "近期播放", "互动率", "评分", "联系方式"]
     sheet.append(headers)
     for cell in sheet[1]:
         cell.font = Font(bold=True)

@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/influencer_discovery.db"
     redis_url: str = "redis://localhost:6379/0"
     youtube_api_key: str = ""
+    tavily_api_key: str = ""
     search_engine_api_key: str = ""
     search_engine_id: str = ""
     access_username: str = ""

@@ -48,6 +48,7 @@ class PlatformAccount(SQLModel, table=True):
     follower_count: int = 0
     bio: str = ""
     avatar_url: str = ""
+    data_source: str = "real_public"
     last_refreshed_at: Optional[datetime] = None
 
     creator: Creator = Relationship(back_populates="accounts")
@@ -94,6 +95,8 @@ class SearchTask(SQLModel, table=True):
     language_options: str = ""
     status: TaskStatus = TaskStatus.queued
     error_summary: str = ""
+    use_demo_data: bool = False
+    connector_status: str = ""
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 

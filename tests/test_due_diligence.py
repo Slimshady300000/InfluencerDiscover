@@ -60,6 +60,7 @@ def test_build_due_diligence_card_includes_recommendation_and_risk():
     assert "Creator A" in card.recommendation
     assert "Hydrating serum review" in card.representative_content
     assert card.suggested_contact == "business@example.com"
+    assert "建议进入人工复核" in card.recommendation
 
 
 def test_build_due_diligence_card_uses_fallbacks_for_blank_titles_no_contact_or_risks():
@@ -73,9 +74,9 @@ def test_build_due_diligence_card_uses_fallbacks_for_blank_titles_no_contact_or_
         risks=[],
     )
 
-    assert card.representative_content == "No recent content samples stored."
-    assert card.risks == "No obvious risk found in stored data."
-    assert card.suggested_contact == "Use public DM entry if visible on the profile."
+    assert card.representative_content == "暂无已保存的代表内容。"
+    assert card.risks == "已保存数据中暂无明显风险。"
+    assert card.suggested_contact == "如果主页可见私信入口，可优先使用公开私信联系。"
 
 
 def test_result_card_renders_persisted_due_diligence_data(client, db_session):
@@ -127,5 +128,6 @@ def test_result_card_renders_persisted_due_diligence_data(client, db_session):
     assert response.status_code == 200
     assert "Creator A" in response.text
     assert "Hydrating serum review" in response.text
-    assert "No recent sponsored content found." in response.text
+    assert "近期赞助内容信息不足。" in response.text
+    assert "推荐理由：" in response.text
     assert "business@example.com" in response.text

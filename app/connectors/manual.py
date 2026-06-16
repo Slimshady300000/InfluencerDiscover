@@ -80,6 +80,7 @@ def _build_candidate(platform: Platform, index: int) -> RawCandidate:
         display_name=f"{fixture['display_name']}{suffix}",
         profile_url=_variant_url(str(fixture["profile_url"]), profile_suffix),
         follower_count=max(follower_count, 10000),
+        data_source="demo_fallback",
         bio=str(fixture["bio"]),
         contents=[
             RawContent(

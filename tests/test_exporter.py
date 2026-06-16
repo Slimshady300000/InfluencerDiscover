@@ -66,13 +66,13 @@ def test_build_candidate_workbook_contains_expected_headers():
     workbook = load_workbook(BytesIO(payload))
     sheet = workbook.active
     assert [cell.value for cell in sheet[1][:7]] == [
-        "Creator",
-        "Platform",
-        "Followers",
-        "Recent Views",
-        "Engagement Rate",
-        "Score",
-        "Contact",
+        "达人",
+        "平台",
+        "粉丝数",
+        "近期播放",
+        "互动率",
+        "评分",
+        "联系方式",
     ]
     assert sheet["G2"].value == "business@example.com"
 

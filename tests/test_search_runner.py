@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -21,8 +23,42 @@ from app.services.search_runner import run_search_task
 
 class SearchSettings:
     youtube_api_key = ""
+    tavily_api_key = ""
     search_engine_api_key = "search-key"
     search_engine_id = "cx"
+
+
+class NoLiveSettings:
+    youtube_api_key = ""
+    tavily_api_key = ""
+    search_engine_api_key = ""
+    search_engine_id = ""
+
+
+class TavilySettings:
+    youtube_api_key = ""
+    tavily_api_key = "tvly-test"
+    search_engine_api_key = ""
+    search_engine_id = ""
+
+
+class EmptyCrawlerConnector:
+    def __init__(self):
+        self.last_status = {}
+
+    def search(self, intent):
+        self.last_status = {
+            platform.value: {
+                "query": f"site:{platform.value}.com skincare creator contact",
+                "returned_count": 0,
+                "parsed_count": 0,
+                "fetched_count": 0,
+                "skipped_count": 0,
+                "errors": [],
+            }
+            for platform in intent.platforms
+        }
+        return []
 
 
 def test_manual_connector_returns_candidates():
@@ -63,7 +99,10 @@ def test_manual_connector_returns_reviewable_volume_for_each_selected_platform()
         assert len({candidate.profile_url for candidate in platform_candidates}) >= 8
 
 
-def test_run_search_task_persists_candidates_and_scores():
+def test_run_search_task_persists_candidates_and_scores(monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -72,6 +111,7 @@ def test_run_search_task_persists_candidates_and_scores():
             input_type="keyword",
             platforms="youtube",
             status=TaskStatus.queued,
+            use_demo_data=True,
         )
         session.add(task)
         session.commit()
@@ -93,7 +133,10 @@ def test_run_search_task_persists_candidates_and_scores():
         assert contacts[0].value == "business@example.com"
 
 
-def test_run_search_task_persists_candidates_for_each_selected_platform():
+def test_run_search_task_persists_candidates_for_each_selected_platform(monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -102,6 +145,7 @@ def test_run_search_task_persists_candidates_for_each_selected_platform():
             input_type="keyword",
             platforms="youtube,tiktok,instagram",
             status=TaskStatus.queued,
+            use_demo_data=True,
         )
         session.add(task)
         session.commit()
@@ -148,6 +192,7 @@ def test_run_search_task_uses_search_engine_connector_when_configured(monkeypatc
             ]
 
     monkeypatch.setattr(search_runner, "get_settings", lambda: SearchSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
     monkeypatch.setattr(search_runner, "SearchEngineConnector", FakeSearchEngineConnector)
 
     with Session(engine) as session:
@@ -167,7 +212,107 @@ def test_run_search_task_uses_search_engine_connector_when_configured(monkeypatc
         assert [creator.display_name for creator in creators] == ["Live Creator"]
 
 
-def test_run_search_task_rolls_back_candidate_rows_when_scoring_fails(monkeypatch):
+def test_run_search_task_uses_tavily_connector_before_crawler_when_configured(monkeypatch):
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+
+    class FakeTavilyConnector:
+        def __init__(self, api_key):
+            assert api_key == "tvly-test"
+            self.last_status = {
+                "youtube": {
+                    "query": "skincare creator contact",
+                    "returned_count": 1,
+                    "parsed_count": 1,
+                    "fetched_count": 0,
+                    "skipped_count": 0,
+                    "errors": [],
+                }
+            }
+
+        def search(self, _intent):
+            return [
+                RawCandidate(
+                    platform=Platform.youtube,
+                    handle="@tavily_creator",
+                    display_name="Tavily Creator",
+                    profile_url="https://www.youtube.com/@tavily_creator",
+                    follower_count=0,
+                    bio="Tavily search result",
+                    contents=[
+                        RawContent(
+                            content_url="https://www.youtube.com/@tavily_creator",
+                            title="Tavily Creator - YouTube",
+                            description="Tavily search result",
+                        )
+                    ],
+                )
+            ]
+
+    class FailingCrawlerConnector:
+        def search(self, _intent):
+            raise AssertionError("crawler should not run before configured Tavily search")
+
+    monkeypatch.setattr(search_runner, "get_settings", lambda: TavilySettings())
+    monkeypatch.setattr(search_runner, "TavilyConnector", FakeTavilyConnector)
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", FailingCrawlerConnector)
+
+    with Session(engine) as session:
+        task = SearchTask(
+            input_text="skincare",
+            input_type="keyword",
+            platforms="youtube",
+            status=TaskStatus.queued,
+        )
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+
+        run_search_task(session, task.id)
+
+        creators = session.exec(select(Creator)).all()
+        saved_task = session.get(SearchTask, task.id)
+        connector_status = json.loads(saved_task.connector_status)
+        assert [creator.display_name for creator in creators] == ["Tavily Creator"]
+        assert connector_status["mode"] == "real_tavily_search"
+        assert connector_status["platforms"]["youtube"]["parsed_count"] == 1
+
+
+def test_collect_raw_candidates_does_not_use_demo_by_default(monkeypatch):
+    class FailingManualConnector:
+        def search(self, _intent):
+            raise AssertionError("demo fallback should not run by default")
+
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+    monkeypatch.setattr(search_runner, "ManualConnector", FailingManualConnector)
+    intent = parse_search_input("skincare", [Platform.youtube])
+
+    collection = search_runner.collect_candidates_with_status(intent, use_demo_data=False)
+
+    assert collection.candidates == []
+    assert collection.connector_status["demo_used"] is False
+    assert collection.connector_status["real_result_count"] == 0
+    assert "No real public results" in collection.connector_status["summary"]
+
+
+def test_collect_raw_candidates_uses_demo_only_when_requested(monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+    intent = parse_search_input("skincare", [Platform.youtube])
+
+    collection = search_runner.collect_candidates_with_status(intent, use_demo_data=True)
+
+    assert len(collection.candidates) == 8
+    assert {candidate.data_source for candidate in collection.candidates} == {"demo_fallback"}
+    assert collection.connector_status["demo_used"] is True
+    assert collection.connector_status["demo_result_count"] == 8
+
+
+def test_run_search_task_records_no_real_results_without_demo(monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -176,6 +321,35 @@ def test_run_search_task_rolls_back_candidate_rows_when_scoring_fails(monkeypatc
             input_type="keyword",
             platforms="youtube",
             status=TaskStatus.queued,
+        )
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+
+        run_search_task(session, task.id)
+
+        saved_task = session.get(SearchTask, task.id)
+        connector_status = json.loads(saved_task.connector_status)
+        assert saved_task.status == TaskStatus.complete
+        assert saved_task.error_summary == "No real public results found."
+        assert connector_status["real_result_count"] == 0
+        assert connector_status["demo_used"] is False
+        assert session.exec(select(Creator)).all() == []
+
+
+def test_run_search_task_rolls_back_candidate_rows_when_scoring_fails(monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        task = SearchTask(
+            input_text="skincare",
+            input_type="keyword",
+            platforms="youtube",
+            status=TaskStatus.queued,
+            use_demo_data=True,
         )
         session.add(task)
         session.commit()
@@ -200,6 +374,9 @@ def test_run_search_task_rolls_back_candidate_rows_when_scoring_fails(monkeypatc
 
 
 def test_run_search_task_rolls_back_before_marking_failed(monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -208,6 +385,7 @@ def test_run_search_task_rolls_back_before_marking_failed(monkeypatch):
             input_type="keyword",
             platforms="youtube",
             status=TaskStatus.queued,
+            use_demo_data=True,
         )
         session.add(task)
         session.commit()

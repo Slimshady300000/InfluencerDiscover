@@ -33,6 +33,32 @@ def init_db() -> None:
     # Register table classes before creating metadata-backed tables.
     importlib.import_module("app.models")
     SQLModel.metadata.create_all(engine)
+    _ensure_sqlite_columns(engine)
+
+
+def _ensure_sqlite_columns(db_engine) -> None:
+    if db_engine.dialect.name != "sqlite":
+        return
+
+    with db_engine.begin() as connection:
+        account_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(platformaccount)")
+        }
+        if "data_source" not in account_columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE platformaccount "
+                "ADD COLUMN data_source VARCHAR NOT NULL DEFAULT 'real_public'"
+            )
+
+        task_columns = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(searchtask)")}
+        if "use_demo_data" not in task_columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE searchtask ADD COLUMN use_demo_data BOOLEAN NOT NULL DEFAULT 0"
+            )
+        if "connector_status" not in task_columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE searchtask ADD COLUMN connector_status VARCHAR NOT NULL DEFAULT ''"
+            )
 
 
 def get_session() -> Generator[Session, None, None]:

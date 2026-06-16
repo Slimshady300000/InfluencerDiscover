@@ -1,72 +1,186 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="panel task-panel">
+<section class="workspace-header">
+  <div>
+    <p class="eyebrow">候选审核</p>
+    <h1>搜索任务 #{{ task.id }}</h1>
+  </div>
+  <div class="header-actions">
+    <span class="mode-badge">
+      {% if connector_status.mode == "real_tavily_search" %}
+        Tavily 搜索
+      {% elif connector_status.mode == "real_crawler" %}
+        公开爬虫搜索
+      {% else %}
+        真实公开搜索
+      {% endif %}
+    </span>
+    <span class="status-badge status-{{ task.status }}">{{ task_status_label }}</span>
+    <a class="secondary-button" href="/tasks/{{ task.id }}/export.xlsx">导出 Excel</a>
+  </div>
+</section>
+
+<section class="status-grid">
+  <div class="status-card">
+    <span class="label">输入</span>
+    <strong>{{ task.input_text }}</strong>
+  </div>
+  <div class="status-card">
+    <span class="label">真实结果</span>
+    <strong>{{ connector_status.real_result_count }}</strong>
+  </div>
+  <div class="status-card">
+    <span class="label">候选总数</span>
+    <strong>{{ result_rows|length }}</strong>
+  </div>
+  <div class="status-card">
+    <span class="label">演示数据</span>
+    <strong>{{ "已启用" if connector_status.demo_used else "未启用" }}</strong>
+  </div>
+</section>
+
+{% if task_error_summary %}
+  <section class="notice-panel {{ 'notice-error' if task.status == 'failed' else 'notice-empty' }}">
+    {{ task_error_summary }}
+  </section>
+{% endif %}
+
+<section class="connector-panel">
   <div class="section-header">
     <div>
-      <p class="eyebrow">Candidate review</p>
-      <h1>Search task #{{ task.id }}</h1>
+      <p class="eyebrow">连接器状态</p>
+      <h2>{{ connector_status.summary or "搜索源摘要" }}</h2>
     </div>
-    <span class="status-badge status-{{ task.status }}">{{ task.status }}</span>
   </div>
-  {% if task.error_summary %}
-    <p class="alert">Error: {{ task.error_summary }}</p>
-  {% endif %}
-  <div class="task-toolbar">
-    <div>
-      <span class="label">Input</span>
-      <strong>{{ task.input_text }}</strong>
-    </div>
-    <a class="secondary-button" href="/tasks/{{ task.id }}/export.xlsx">Export Excel</a>
+  <div class="connector-grid">
+    {% for platform, status in connector_status.platforms.items() %}
+      <div class="connector-card">
+        <div class="connector-card-header">
+          <span class="platform-badge platform-{{ platform }}">{{ platform }}</span>
+          <span>抓取 {{ status.fetched_count }}</span>
+        </div>
+        <code>{{ status.query }}</code>
+        <div class="connector-stats">
+          <span>返回 {{ status.returned_count }}</span>
+          <span>解析 {{ status.parsed_count }}</span>
+          <span>跳过 {{ status.skipped_count }}</span>
+        </div>
+        {% if status.errors %}
+          <p class="error-summary">{{ status.errors|join("; ") }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
   </div>
-  <p class="helper-text">Ranked mainly by recent views, engagement, followers, topic fit, and contactability.</p>
-  <table class="data-table result-table">
-    <tr>
-      <th>Creator</th>
-      <th>Platform</th>
-      <th>Profile</th>
-      <th>Followers</th>
-      <th>Avg Views</th>
-      <th>Engagement Rate</th>
-      <th>Score</th>
-      <th>Contact</th>
-      <th>Reasons</th>
-      <th>Risks</th>
-      <th>Card</th>
-      <th>Follow-up</th>
-    </tr>
+</section>
+
+{% if result_rows %}
+  <section class="creator-card-grid">
     {% for row in result_rows %}
       {% set result = row.result %}
       {% set creator = row.creator %}
       {% set account = row.account %}
-      {% set follow_up = row.follow_up %}
-      <tr>
-        <td><strong>{{ creator.display_name if creator else '' }}</strong></td>
-        <td><span class="platform-badge platform-{{ account.platform.value if account else 'unknown' }}">{{ account.platform.value if account else '' }}</span></td>
-        <td>
+      {% set content = row.representative_content %}
+      <article class="creator-card">
+        <div class="creator-card-top">
+          <div>
+            <span class="platform-badge platform-{{ account.platform.value if account else 'unknown' }}">{{ account.platform.value if account else '' }}</span>
+          <span class="source-badge source-{{ row.source_class }}">{{ row.source_label }}</span>
+          </div>
+          <strong class="score-pill">{{ "%.1f"|format(result.final_score) }}</strong>
+        </div>
+        <h2>{{ creator.display_name if creator else '' }}</h2>
+        <p class="creator-bio">{{ account.bio if account else '' }}</p>
+        <div class="creator-meta">
+          <span>{{ account.handle if account else '' }}</span>
+          <span>粉丝数：{{ row.follower_count_label }}</span>
+          <span>互动率：{{ row.engagement_rate_label }}</span>
+        </div>
+        {% if content %}
+          <div class="content-sample">
+            <span class="label">代表内容</span>
+            <a href="{{ content.content_url }}">{{ content.title or content.content_url }}</a>
+            {% if content.description %}<p>{{ content.description }}</p>{% endif %}
+          </div>
+        {% endif %}
+        <div class="contact-row">
+          <span class="label">联系方式</span>
+          <strong>{{ row.contact or "未找到公开联系方式" }}</strong>
+        </div>
+        <details class="reason-details">
+          <summary>{{ row.reason_summary }}</summary>
+          <p>{{ row.reason_details }}</p>
+          {% if row.risk_details %}<p>{{ row.risk_details }}</p>{% endif %}
+        </details>
+        <div class="card-actions">
           {% if account and account.profile_url %}
-            <a href="{{ account.profile_url }}">{{ account.profile_url }}</a>
+            <a class="secondary-button small-button" href="{{ account.profile_url }}">打开主页</a>
           {% endif %}
-        </td>
-        <td class="metric">{{ account.follower_count if account else 0 }}</td>
-        <td class="metric">{{ row.average_views }}</td>
-        <td>{{ row.engagement_rate_label }}</td>
-        <td class="score-cell">{{ "%.1f"|format(result.final_score) }}</td>
-        <td>{{ row.contact }}</td>
-        <td>{{ result.reasons }}</td>
-        <td>{{ result.risks }}</td>
-        <td><a class="secondary-button small-button" href="/results/{{ result.id }}/card">Review card</a></td>
-        <td>
-          <form method="post" action="/creators/{{ result.creator_id }}/follow-up" class="follow-up-form">
-            <input type="hidden" name="task_id" value="{{ task.id }}">
-            <input name="owner" aria-label="Owner" placeholder="Owner" value="{{ follow_up.owner if follow_up else '' }}">
-            <input name="status" aria-label="Status" placeholder="Status" value="{{ follow_up.status if follow_up else '' }}">
-            <input name="tags" aria-label="Tags" placeholder="Tags" value="{{ follow_up.tags if follow_up else '' }}">
-            <textarea name="notes" aria-label="Notes" placeholder="Notes">{{ follow_up.notes if follow_up else '' }}</textarea>
-            <button type="submit" class="secondary-button small-button">Save</button>
-          </form>
-        </td>
-      </tr>
+          <a class="secondary-button small-button" href="/results/{{ result.id }}/card">审核卡片</a>
+        </div>
+      </article>
     {% endfor %}
-  </table>
-</section>
+  </section>
+
+  <section class="section-block">
+    <div class="section-header">
+      <div>
+        <p class="eyebrow">批量审核</p>
+        <h2>候选表格</h2>
+      </div>
+    </div>
+    <table class="data-table compact-review-table">
+      <tr>
+        <th>达人</th>
+        <th>平台</th>
+        <th>来源</th>
+        <th>主页</th>
+        <th>粉丝数</th>
+        <th>平均播放</th>
+        <th>互动率</th>
+        <th>评分</th>
+        <th>联系方式</th>
+        <th>卡片</th>
+        <th>跟进</th>
+      </tr>
+      {% for row in result_rows %}
+        {% set result = row.result %}
+        {% set creator = row.creator %}
+        {% set account = row.account %}
+        {% set follow_up = row.follow_up %}
+        <tr>
+          <td><strong>{{ creator.display_name if creator else '' }}</strong></td>
+          <td><span class="platform-badge platform-{{ account.platform.value if account else 'unknown' }}">{{ account.platform.value if account else '' }}</span></td>
+          <td><span class="source-badge source-{{ row.source_class }}">{{ row.source_label }}</span></td>
+          <td>
+            {% if account and account.profile_url %}
+              <a href="{{ account.profile_url }}">{{ account.profile_url }}</a>
+            {% endif %}
+          </td>
+          <td class="metric">{{ row.follower_count_label }}</td>
+          <td class="metric">{{ row.average_views_label }}</td>
+          <td>{{ row.engagement_rate_label }}</td>
+          <td class="score-cell">{{ "%.1f"|format(result.final_score) }}</td>
+          <td>{{ row.contact }}</td>
+          <td><a class="secondary-button small-button" href="/results/{{ result.id }}/card">审核卡片</a></td>
+          <td>
+            <form method="post" action="/creators/{{ result.creator_id }}/follow-up" class="follow-up-form">
+              <input type="hidden" name="task_id" value="{{ task.id }}">
+              <input name="owner" aria-label="负责人" placeholder="负责人" value="{{ follow_up.owner if follow_up else '' }}">
+              <input name="status" aria-label="跟进状态" placeholder="跟进状态" value="{{ follow_up.status if follow_up else '' }}">
+              <input name="tags" aria-label="标签" placeholder="标签" value="{{ follow_up.tags if follow_up else '' }}">
+              <textarea name="notes" aria-label="备注" placeholder="备注">{{ follow_up.notes if follow_up else '' }}</textarea>
+              <button type="submit" class="secondary-button small-button">保存</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section>
+{% else %}
+  <section class="empty-state">
+    <h2>未找到真实公开结果。</h2>
+    <p>{{ connector_status.summary or "公开搜索没有返回可用达人链接。" }}</p>
+    <a class="secondary-button" href="/">启用演示数据</a>
+  </section>
+{% endif %}
 {% endblock %}

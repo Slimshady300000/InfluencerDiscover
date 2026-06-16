@@ -49,7 +49,7 @@ def test_access_is_open_when_credentials_are_not_configured(session_engine, monk
     main_module.app.dependency_overrides = previous_overrides
 
     assert response.status_code == 200
-    assert "Influencer Discovery" in response.text
+    assert "达人发现" in response.text
 
 
 def test_configured_basic_auth_blocks_missing_or_invalid_credentials(
@@ -80,4 +80,4 @@ def test_configured_basic_auth_allows_valid_credentials(session_engine, monkeypa
     main_module.app.dependency_overrides = previous_overrides
 
     assert response.status_code == 200
-    assert "Influencer Discovery" in response.text
+    assert "达人发现" in response.text

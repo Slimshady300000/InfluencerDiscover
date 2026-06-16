@@ -1,41 +1,75 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="hero-panel">
-  <div class="hero-copy">
-    <p class="eyebrow">Overseas influencer discovery</p>
-    <h1>Search creator candidates</h1>
-    <p class="hero-subtitle">Enter a topic, brand brief, or seed creator URL to build a ranked review list.</p>
+<section class="workspace-header">
+  <div>
+    <p class="eyebrow">公开达人发现</p>
+    <h1>搜索工作台</h1>
   </div>
+  <span class="mode-badge">真实公开搜索</span>
+</section>
+
+<section class="search-workbench">
   <form method="post" action="/search" class="search-form">
-    <div class="search-row">
-      <input name="input_text" required aria-label="Keyword, brand brief, or seed creator URL" placeholder="e.g. skincare for sensitive skin, gaming headset, travel creator">
-      <button type="submit" class="primary-button">Start Search</button>
+    <div class="search-command">
+      <input name="input_text" required aria-label="关键词、品牌需求或种子达人链接" placeholder="输入关键词、品牌需求或种子达人链接">
+      <button type="submit" class="primary-button">开始搜索</button>
     </div>
-    <div class="platform-row" aria-label="Platforms">
-      <label class="platform-option"><input type="checkbox" name="platforms" value="youtube" checked> YouTube</label>
-      <label class="platform-option"><input type="checkbox" name="platforms" value="tiktok"> TikTok</label>
-      <label class="platform-option"><input type="checkbox" name="platforms" value="instagram"> Instagram</label>
+
+    <div class="platform-grid" aria-label="平台">
+      <label class="platform-card">
+        <input type="checkbox" name="platforms" value="youtube" checked>
+        <span>
+          <strong>YouTube</strong>
+          <small>site:youtube.com</small>
+        </span>
+      </label>
+      <label class="platform-card">
+        <input type="checkbox" name="platforms" value="tiktok" checked>
+        <span>
+          <strong>TikTok</strong>
+          <small>site:tiktok.com</small>
+        </span>
+      </label>
+      <label class="platform-card">
+        <input type="checkbox" name="platforms" value="instagram" checked>
+        <span>
+          <strong>Instagram</strong>
+          <small>site:instagram.com</small>
+        </span>
+      </label>
     </div>
-    <input type="hidden" name="run_inline" value="no">
-    <label class="inline-toggle"><input type="checkbox" name="run_inline" value="yes" checked> Run inline for local MVP</label>
+
+    <div class="form-footer">
+      <label class="toggle-row">
+        <input type="checkbox" name="use_demo_data" value="yes">
+        <span>没有真实结果时允许使用演示数据</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" name="run_inline" value="yes" checked>
+        <span>立即运行</span>
+      </label>
+    </div>
   </form>
 </section>
-<section class="panel">
+
+<section class="section-block">
   <div class="section-header">
     <div>
-      <p class="eyebrow">History</p>
-      <h2>Recent tasks</h2>
+      <p class="eyebrow">最近任务</p>
+      <h2>搜索历史</h2>
     </div>
   </div>
-  <table class="data-table">
-    <tr><th>ID</th><th>Input</th><th>Status</th></tr>
-    {% for task in tasks %}
-      <tr>
-        <td><a class="table-link" href="/tasks/{{ task.id }}">#{{ task.id }}</a></td>
-        <td>{{ task.input_text }}</td>
-        <td><span class="status-badge status-{{ task.status }}">{{ task.status }}</span></td>
-      </tr>
+  <div class="task-card-grid">
+    {% for row in task_rows %}
+      {% set task = row.task %}
+      <a class="task-card" href="/tasks/{{ task.id }}">
+        <span class="status-badge status-{{ task.status }}">{{ row.status_label }}</span>
+        <strong>#{{ task.id }} {{ task.input_text }}</strong>
+        <span>{{ row.platforms_label }}</span>
+      </a>
+    {% else %}
+      <div class="empty-state compact-empty">暂无搜索任务。</div>
     {% endfor %}
-  </table>
+  </div>
 </section>
 {% endblock %}

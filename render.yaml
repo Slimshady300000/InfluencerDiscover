@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: influencer-discovery
+    runtime: docker
+    plan: free
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_NAME
+        value: Influencer Discovery
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        value: redis://localhost:6379/0
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: SEARCH_ENGINE_API_KEY
+        sync: false
+      - key: SEARCH_ENGINE_ID
+        sync: false
+      - key: ACCESS_USERNAME
+        sync: false
+      - key: ACCESS_PASSWORD
+        sync: false

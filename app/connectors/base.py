@@ -32,6 +32,7 @@ class RawCandidate:
     display_name: str
     profile_url: str
     follower_count: int
+    data_source: str = "real_public"
     bio: str = ""
     avatar_url: str = ""
     contents: list[RawContent] = field(default_factory=list)

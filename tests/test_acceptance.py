@@ -7,6 +7,33 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from app.db import get_session
 import app.main as main_module
+import app.services.search_runner as search_runner
+
+
+class EmptyCrawlerConnector:
+    def __init__(self):
+        self.last_status = {}
+
+    def search(self, intent):
+        self.last_status = {
+            platform.value: {
+                "query": f"site:{platform.value}.com skincare creator contact",
+                "returned_count": 0,
+                "parsed_count": 0,
+                "fetched_count": 0,
+                "skipped_count": 0,
+                "errors": [],
+            }
+            for platform in intent.platforms
+        }
+        return []
+
+
+class NoLiveSettings:
+    youtube_api_key = ""
+    tavily_api_key = ""
+    search_engine_api_key = ""
+    search_engine_id = ""
 
 
 @pytest.fixture
@@ -33,13 +60,17 @@ def client(session_engine, monkeypatch):
     main_module.app.dependency_overrides = previous_overrides
 
 
-def test_acceptance_search_to_results_to_export_and_card(client):
+def test_acceptance_search_to_results_to_export_and_card(client, monkeypatch):
+    monkeypatch.setattr(search_runner, "get_settings", lambda: NoLiveSettings())
+    monkeypatch.setattr(search_runner, "WebCrawlerConnector", EmptyCrawlerConnector)
+
     create_response = client.post(
         "/search",
         data={
             "input_text": "skincare",
             "platforms": ["youtube", "tiktok", "instagram"],
             "run_inline": "yes",
+            "use_demo_data": "yes",
         },
         follow_redirects=False,
     )
@@ -48,12 +79,13 @@ def test_acceptance_search_to_results_to_export_and_card(client):
 
     detail_response = client.get(task_url)
     assert detail_response.status_code == 200
-    assert "Search task" in detail_response.text
-    assert "Ranked mainly by recent views" in detail_response.text
+    assert "搜索任务" in detail_response.text
+    assert "公开爬虫搜索" in detail_response.text
+    assert "演示数据" in detail_response.text
     assert "Creator A" in detail_response.text
     assert "Creator B" in detail_response.text
     assert "Creator C" in detail_response.text
-    assert detail_response.text.count("Review card") >= 24
+    assert detail_response.text.count("审核卡片") >= 24
     assert "/export.xlsx" in detail_response.text
     assert "/results/" in detail_response.text
     assert "/card" in detail_response.text
@@ -65,7 +97,7 @@ def test_acceptance_search_to_results_to_export_and_card(client):
     )
     workbook = load_workbook(BytesIO(export_response.content))
     sheet = workbook.active
-    assert sheet["A1"].value == "Creator"
+    assert sheet["A1"].value == "达人"
     assert sheet.max_row >= 25
     exported_names = {sheet.cell(row=row, column=1).value for row in range(2, sheet.max_row + 1)}
     exported_platforms = {sheet.cell(row=row, column=2).value for row in range(2, sheet.max_row + 1)}
@@ -76,7 +108,7 @@ def test_acceptance_search_to_results_to_export_and_card(client):
     card_response = client.get(card_path)
     assert card_response.status_code == 200
     assert any(name in card_response.text for name in {"Creator A", "Creator B", "Creator C"})
-    assert "Recommendation:" in card_response.text
+    assert "推荐理由：" in card_response.text
 
 
 def _extract_first_card_path(html: str) -> str:
